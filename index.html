@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skin Assessment — Phase 2</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.44.0/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f7f6f3;min-height:100vh;display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem}
+.card{background:#fff;border-radius:20px;border:1px solid #e5e3dc;max-width:640px;width:100%;padding:2rem;margin:0 auto;position:relative}
+.prog-bar{height:4px;background:#f0ede8;border-radius:2px;margin-bottom:1.75rem}
+.prog-fill{height:100%;background:#D4537E;border-radius:2px;transition:width .4s ease}
+.screen{display:none}.screen.active{display:block}
+.step-lbl{font-size:11px;color:#aaa;letter-spacing:.07em;text-transform:uppercase;margin-bottom:5px}
+.q-head{font-size:20px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.q-sub{font-size:14px;color:#777;margin-bottom:1.4rem;line-height:1.6}
+.field-lbl{font-size:13px;color:#555;margin-bottom:5px;font-weight:500}
+input[type=text],input[type=tel],input[type=number]{width:100%;margin-bottom:10px;padding:10px 13px;border:1px solid #ddd;border-radius:10px;font-size:14px;outline:none;font-family:inherit;color:#1a1a1a;background:#fff;transition:border .15s,box-shadow .15s}
+input:focus{border-color:#D4537E;box-shadow:0 0 0 3px rgba(212,83,126,.1)}
+input.err{border-color:#E24B4A;box-shadow:0 0 0 3px rgba(226,75,74,.1)}
+.err-msg{font-size:12px;color:#A32D2D;margin-top:-6px;margin-bottom:10px;display:flex;align-items:center;gap:4px}
+.nav{display:flex;align-items:center;justify-content:space-between;margin-top:1rem}
+.btn-back{background:#fff;border:1px solid #ddd;border-radius:10px;padding:10px 20px;font-size:14px;cursor:pointer;color:#666;font-family:inherit;transition:background .15s}
+.btn-back:hover{background:#f5f5f5}
+.btn-next{background:#D4537E;border:none;border-radius:10px;padding:10px 24px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;font-family:inherit;transition:background .15s}
+.btn-next:disabled{opacity:.35;cursor:not-allowed}
+.btn-next:not(:disabled):hover{background:#993556}
+
+/* Gender / skin type cards */
+.opt-grid{display:grid;gap:9px;margin-bottom:1.25rem}
+.opt-card{background:#fff;border:1px solid #e5e3dc;border-radius:14px;padding:0 0 10px;cursor:pointer;transition:border .15s,background .15s;text-align:left;width:100%;overflow:hidden}
+.opt-card:hover{background:#fdf8f9;border-color:#D4537E}
+.opt-card.sel{border:2px solid #D4537E;background:#FBEAF0}
+.img-wrap{width:100%;height:72px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:8px;background:#f7f6f3}
+.opt-card .ol{font-size:13px;font-weight:600;color:#1a1a1a;padding:0 10px}
+.opt-card .os{font-size:11px;color:#999;padding:0 10px;margin-top:2px;line-height:1.4}
+.opt-card.sel .ol{color:#72243E}.opt-card.sel .os{color:#993556}
+
+/* Concern cards */
+.concern-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:1.25rem}
+.c-card{background:#fff;border:1px solid #e5e3dc;border-radius:14px;padding:12px 10px;cursor:pointer;transition:all .15s;text-align:left;width:100%}
+.c-card:hover{background:#fdf8f9;border-color:#D4537E}
+.c-card.sel{border:2px solid #D4537E;background:#FBEAF0}
+.c-card .cn{font-size:13px;font-weight:600;color:#1a1a1a;margin-top:4px}
+.c-card .cs{font-size:11px;color:#999;margin-top:2px;line-height:1.3}
+.c-card.sel .cn{color:#72243E}.c-card.sel .cs{color:#993556}
+
+/* Location */
+.loc-wrap{position:relative;margin-bottom:10px}
+.loc-input{width:100%;padding:10px 13px 10px 38px;border:1px solid #ddd;border-radius:10px;font-size:14px;outline:none;font-family:inherit;color:#1a1a1a;background:#fff;transition:border .15s}
+.loc-input:focus{border-color:#D4537E;box-shadow:0 0 0 3px rgba(212,83,126,.1)}
+.loc-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:16px;color:#aaa;pointer-events:none}
+.loc-detect{font-size:13px;color:#D4537E;cursor:pointer;display:inline-flex;align-items:center;gap:5px;margin-bottom:10px;font-weight:600}
+.loc-detect:hover{color:#993556}
+.suggestions{position:absolute;top:100%;left:0;right:0;background:#fff;border:1px solid #e5e3dc;border-radius:10px;z-index:100;box-shadow:0 6px 20px rgba(0,0,0,.1);max-height:210px;overflow-y:auto;margin-top:3px}
+.sugg-item{padding:10px 14px;font-size:14px;cursor:pointer;color:#1a1a1a;border-bottom:1px solid #f0ede8;transition:background .1s}
+.sugg-item:last-child{border-bottom:none}
+.sugg-item:hover{background:#fdf8f9}
+.sugg-item strong{color:#D4537E;font-weight:600}
+
+/* Summary */
+.sum-card{background:#f7f6f3;border-radius:14px;padding:14px 16px;margin-bottom:1.25rem}
+.sum-row{display:flex;justify-content:space-between;align-items:flex-start;padding:5px 0;border-bottom:1px solid #ebe9e3;font-size:13px}
+.sum-row:last-child{border-bottom:none}
+.sk{color:#888}.sv{font-weight:600;color:#1a1a1a;text-align:right;max-width:62%}
+.ctags{display:flex;flex-wrap:wrap;gap:4px;justify-content:flex-end}
+.ctag{font-size:11px;padding:3px 9px;border-radius:20px;background:#FBEAF0;color:#72243E;border:1px solid #ED93B1;font-weight:500}
+
+/* Products */
+.prod-grid{display:grid;gap:10px;margin-bottom:1.25rem}
+.prod-card{background:#fff;border:1px solid #e5e3dc;border-radius:14px;padding:14px;display:flex;gap:13px;align-items:flex-start}
+.prod-ico{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px}
+.prod-body{flex:1;min-width:0}
+.badge-row{display:flex;align-items:center;flex-wrap:wrap;gap:5px;margin-bottom:3px}
+.prod-name{font-size:14px;font-weight:700;color:#1a1a1a}
+.pri-label{font-size:11px;padding:2px 8px;border-radius:20px;background:#E1F5EE;color:#085041;font-weight:600}
+.sec-label{font-size:11px;padding:2px 8px;border-radius:20px;background:#f0ede8;color:#777}
+.prod-why{font-size:12px;color:#666;line-height:1.5;margin-bottom:6px}
+.pbadges{display:flex;flex-wrap:wrap;gap:4px;margin-bottom:6px}
+.pb{font-size:11px;padding:2px 8px;border-radius:20px;background:#FBEAF0;color:#72243E;font-weight:500}
+.prod-use{font-size:12px;color:#666;background:#f7f6f3;padding:6px 10px;border-radius:8px;margin-bottom:8px;line-height:1.5}
+.prod-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.prod-price{font-size:17px;font-weight:700;color:#D4537E}
+.prod-orig{font-size:12px;color:#aaa;text-decoration:line-through;margin-left:3px}
+.disc-badge{font-size:11px;padding:2px 7px;border-radius:20px;background:#E1F5EE;color:#085041;font-weight:600}
+.prod-unit{font-size:11px;color:#aaa}
+.add-btn{background:#D4537E;border:none;border-radius:9px;padding:7px 14px;font-size:12px;font-weight:600;cursor:pointer;color:#fff;font-family:inherit;white-space:nowrap;display:flex;align-items:center;gap:5px;transition:background .15s}
+.add-btn:hover{background:#993556}
+.add-btn.added{background:#E1F5EE;color:#085041;border:1px solid #9FE1CB}
+.add-btn.added:hover{background:#cff0e3}
+
+/* Cart bar */
+.cart-bar{position:sticky;bottom:0;background:#fff;border:1px solid #e5e3dc;border-radius:14px;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;box-shadow:0 -3px 16px rgba(0,0,0,.07);margin-top:1rem}
+.cart-info{font-size:12px;color:#888}
+.cart-total{font-size:17px;font-weight:700;color:#1a1a1a}
+.cart-btn{background:#1D9E75;border:none;border-radius:10px;padding:10px 20px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;font-family:inherit;display:flex;align-items:center;gap:6px;transition:background .15s}
+.cart-btn:hover{background:#085041}
+.cart-btn:disabled{opacity:.4;cursor:not-allowed}
+
+/* CTA grid */
+.cta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:.5rem;margin-bottom:1rem}
+.cta-card{background:#f7f6f3;border-radius:14px;padding:14px;cursor:pointer;border:1px solid #ebe9e3;text-align:left;transition:border .15s,background .15s}
+.cta-card:hover{border-color:#D4537E;background:#fdf8f9}
+.cta-icon{font-size:22px;color:#D4537E;margin-bottom:6px}
+.cta-title{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:2px}
+.cta-sub{font-size:12px;color:#888;line-height:1.4}
+
+.success-bar{background:#E1F5EE;border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;font-size:14px;color:#085041;font-weight:500}
+.section-title{font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:12px;display:flex;align-items:center;gap:7px}
+
+.start-features{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:2rem}
+.feat{background:#f7f6f3;border-radius:12px;padding:13px}
+.feat-icon{font-size:22px;color:#D4537E;margin-bottom:4px}
+.feat-label{font-size:13px;font-weight:600;color:#1a1a1a}
+.feat-sub{font-size:12px;color:#999;margin-top:2px}
+
+@media(max-width:520px){
+  body{padding:0;align-items:flex-start}
+  .card{border-radius:0;border-left:none;border-right:none;padding:1.25rem;min-height:100vh}
+  .start-features{grid-template-columns:1fr 1fr}
+  .concern-grid{grid-template-columns:1fr 1fr}
+  .opt-grid.g3{grid-template-columns:1fr 1fr 1fr}
+  .cta-grid{grid-template-columns:1fr}
+  .prod-meta{flex-direction:column;align-items:flex-start}
+}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+
+  <!-- START -->
+  <div class="screen active" id="s0">
+    <div style="text-align:center;padding:.5rem 0 1.5rem">
+      <div style="width:68px;height:68px;background:#FBEAF0;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+        <i class="ti ti-sparkles" style="font-size:28px;color:#D4537E"></i>
+      </div>
+      <div style="font-size:24px;font-weight:700;color:#1a1a1a;margin-bottom:8px">Skin Assessment</div>
+      <div style="font-size:14px;color:#777;max-width:380px;margin:0 auto 2rem;line-height:1.6">Answer 4 quick questions and get dermatologist-mapped product recommendations — with pricing and instant ordering.</div>
+      <div class="start-features">
+        <div class="feat">
+          <div class="feat-icon"><i class="ti ti-list-check"></i></div>
+          <div class="feat-label">4 questions</div>
+          <div class="feat-sub">Under 2 min</div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon"><i class="ti ti-pill"></i></div>
+          <div class="feat-label">6 products</div>
+          <div class="feat-sub">Expert mapped</div>
+        </div>
+        <div class="feat">
+          <div class="feat-icon"><i class="ti ti-shopping-cart"></i></div>
+          <div class="feat-label">Add to cart</div>
+          <div class="feat-sub">Order instantly</div>
+        </div>
+      </div>
+      <button class="btn-next" style="padding:12px 38px;font-size:15px" onclick="goTo(1)">Start Assessment <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 1 -->
+  <div class="screen" id="s1">
+    <div class="step-lbl">Step 1 of 4 — Personal info</div>
+    <div class="q-head">Tell us about yourself</div>
+    <div class="q-sub">Helps us personalise your skin care recommendation.</div>
+    <div class="field-lbl">Full name</div>
+    <input type="text" id="f-name" placeholder="e.g. Priya Sharma" oninput="chk1()">
+    <div class="field-lbl">Age</div>
+    <input type="number" id="f-age" placeholder="e.g. 28" min="10" max="99" oninput="chk1()">
+    <div class="field-lbl">Gender</div>
+    <div class="opt-grid g3" style="grid-template-columns:1fr 1fr 1fr" id="g-gender">
+      <button class="opt-card" onclick="pick('gender','Female',this)">
+        <div class="img-wrap">
+          <svg viewBox="0 0 160 72" width="160" height="72"><rect width="160" height="72" fill="#FBEAF0"/><circle cx="80" cy="30" r="22" fill="#ED93B1"/><rect x="55" y="52" width="50" height="24" rx="10" fill="#F4C0D1"/><circle cx="71" cy="27" r="3.5" fill="#72243E"/><circle cx="89" cy="27" r="3.5" fill="#72243E"/><path d="M74 38 q6 5 12 0" stroke="#72243E" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="80" cy="20" r="12" fill="none" stroke="#F4C0D1" stroke-width="2" opacity=".5"/></svg>
+        </div>
+        <div class="ol">Female</div>
+      </button>
+      <button class="opt-card" onclick="pick('gender','Male',this)">
+        <div class="img-wrap">
+          <svg viewBox="0 0 160 72" width="160" height="72"><rect width="160" height="72" fill="#E6F1FB"/><circle cx="80" cy="30" r="22" fill="#85B7EB"/><rect x="55" y="52" width="50" height="24" rx="10" fill="#B5D4F4"/><circle cx="71" cy="27" r="3.5" fill="#0C447C"/><circle cx="89" cy="27" r="3.5" fill="#0C447C"/><path d="M74 38 q6 5 12 0" stroke="#0C447C" stroke-width="2" fill="none" stroke-linecap="round"/><rect x="68" y="15" width="24" height="8" rx="4" fill="#B5D4F4"/></svg>
+        </div>
+        <div class="ol">Male</div>
+      </button>
+      <button class="opt-card" onclick="pick('gender','Other',this)">
+        <div class="img-wrap">
+          <svg viewBox="0 0 160 72" width="160" height="72"><rect width="160" height="72" fill="#EEEDFE"/><circle cx="80" cy="30" r="22" fill="#AFA9EC"/><rect x="55" y="52" width="50" height="24" rx="10" fill="#CECBF6"/><circle cx="71" cy="27" r="3.5" fill="#3C3489"/><circle cx="89" cy="27" r="3.5" fill="#3C3489"/><path d="M74 38 q6 5 12 0" stroke="#3C3489" stroke-width="2" fill="none" stroke-linecap="round"/></svg>
+        </div>
+        <div class="ol">Other</div>
+      </button>
+    </div>
+    <div class="nav">
+      <button class="btn-back" onclick="goTo(0)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn-next" id="n1" onclick="goTo(2)" disabled>Continue <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 2 -->
+  <div class="screen" id="s2">
+    <div class="step-lbl">Step 2 of 4 — Skin type</div>
+    <div class="q-head">What is your skin type?</div>
+    <div class="q-sub">Pick what best describes your skin on a typical day.</div>
+    <div class="opt-grid" style="grid-template-columns:1fr 1fr" id="g-skin">
+      <button class="opt-card" onclick="pick('skin','Oily',this)">
+        <div class="img-wrap">
+          <svg viewBox="0 0 160 72" width="160" height="72"><rect width="160" height="72" fill="#E1F5EE"/><circle cx="80" cy="36" r="26" fill="#5DCAA5" opacity=".7"/><ellipse cx="68" cy="28" rx="5" ry="8" fill="#1D9E75" opacity=".5"/><ellipse cx="92" cy="28" rx="5" ry="8" fill="#1D9E75" opacity=".5"/><circle cx="72" cy="19" r="3.5" fill="#0F6E56" opacity=".8"/><circle cx="90" cy="18" r="2.5" fill="#0F6E56" opacity=".7"/><circle cx="65" cy="42" r="2" fill="#0F6E56" opacity=".6"/><circle cx="95" cy="40" r="2.5" fill="#0F6E56" opacity=".6"/><text x="80" y="66" text-anchor="middle" font-size="10" fill="#085041" font-family="sans-serif" font-weight="600">Shiny · large pores</text></svg>
+        </div>
+        <div class="ol">Oily</div>
+        <div class="os">Frequent breakouts, excess shine</div>
+      </button>
+      <button class="opt-card" onclick="pick('skin','Dry',this)">
+        <div class="img-wrap">
+          <svg viewBox="0 0 160 72" width="160" height="72"><rect width="160" height="72" fill="#FAEEDA"/><circle cx="80" cy="36" r="26" fill="#FAC775" opacity=".7"/><path d="M63 28 q8-4 14 0 q6 4 14 0" stroke="#854F0B" stroke-width="1.5" fill="none" opacity=".5"/><path d="M66 40 q7-3 12 0" stroke="#854F0B" stroke-width="1.5" fill="none" opacity=".5"/><path d="M88 39 q5-2 9 1" stroke="#854F0B" stroke-width="1.5" fill="none" opacity=".5"/><path d="M70 48 q10-3 18 0" stroke="#854F0B" stroke-width="1" fill="none" opacity=".3"/><text x="80" y="66" text-anchor="middle" font-size="10" fill="#633806" font-family="sans-serif" font-weight="600">Flaky · tight texture</text></svg>
+        </div>
+        <div class="ol">Dry</div>
+        <div class="os">Tight, flaky, rough patches</div>
+      </button>
+      <button class="opt-card" onclick="pick('skin','Combination',this)">
+        <div class="img-wrap">
+          <svg viewBox="0 0 160 72" width="160" height="72"><rect width="160" height="72" fill="#EEEDFE"/><circle cx="80" cy="36" r="26" fill="#AFA9EC" opacity=".7"/><ellipse cx="80" cy="30" rx="10" ry="13" fill="#7F77DD" opacity=".7"/><path d="M58 42 q7-3 12 0" stroke="#3C3489" stroke-width="1.2" fill="none" opacity=".4"/><path d="M90 40 q7-3 12 1" stroke="#3C3489" stroke-width="1.2" fill="none" opacity=".4"/><text x="80" y="66" text-anchor="middle" font-size="10" fill="#26215C" font-family="sans-serif" font-weight="600">Oily T-zone · dry cheeks</text></svg>
+        </div>
+        <div class="ol">Combination</div>
+        <div class="os">Oily T-zone, dry cheeks</div>
+      </button>
+      <button class="opt-card" onclick="pick('skin','Normal',this)">
+        <div class="img-wrap">
+          <svg viewBox="0 0 160 72" width="160" height="72"><rect width="160" height="72" fill="#EAF3DE"/><circle cx="80" cy="36" r="26" fill="#97C459" opacity=".6"/><circle cx="71" cy="31" r="4" fill="#3B6D11" opacity=".7"/><circle cx="89" cy="31" r="4" fill="#3B6D11" opacity=".7"/><path d="M72 42 q8 6 16 0" stroke="#3B6D11" stroke-width="2" fill="none" stroke-linecap="round"/><circle cx="80" cy="20" r="2" fill="#639922" opacity=".5"/><text x="80" y="66" text-anchor="middle" font-size="10" fill="#173404" font-family="sans-serif" font-weight="600">Balanced · rarely reacts</text></svg>
+        </div>
+        <div class="ol">Normal</div>
+        <div class="os">Balanced, rarely reacts</div>
+      </button>
+    </div>
+    <div class="nav">
+      <button class="btn-back" onclick="goTo(1)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn-next" id="n2" onclick="goTo(3)" disabled>Continue <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 3 -->
+  <div class="screen" id="s3">
+    <div class="step-lbl">Step 3 of 4 — Skin concerns</div>
+    <div class="q-head">What are your skin concerns?</div>
+    <div class="q-sub">Select all that apply — you'll get products matched to each concern.</div>
+    <div class="concern-grid" id="g-concern">
+      <button class="c-card" onclick="tog('Tanning',this)">
+        <svg viewBox="0 0 52 36" width="52" height="36"><rect width="52" height="36" fill="#FAEEDA" rx="8"/><circle cx="26" cy="15" r="9" fill="#FAC775"/><line x1="26" y1="3" x2="26" y2="6" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round"/><line x1="26" y1="24" x2="26" y2="27" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round"/><line x1="14" y1="15" x2="11" y2="15" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round"/><line x1="38" y1="15" x2="41" y2="15" stroke="#EF9F27" stroke-width="1.8" stroke-linecap="round"/><rect x="6" y="29" width="40" height="5" rx="2.5" fill="#BA7517" opacity=".35"/></svg>
+        <div class="cn">Tanning</div>
+        <div class="cs">Uneven tone from sun exposure</div>
+      </button>
+      <button class="c-card" onclick="tog('Pigmentation',this)">
+        <svg viewBox="0 0 52 36" width="52" height="36"><rect width="52" height="36" fill="#FBEAF0" rx="8"/><circle cx="26" cy="18" r="11" fill="#F4C0D1"/><circle cx="21" cy="14" r="3.5" fill="#D4537E" opacity=".75"/><circle cx="31" cy="12" r="2.5" fill="#993556" opacity=".85"/><circle cx="28" cy="22" r="3" fill="#D4537E" opacity=".65"/><circle cx="19" cy="22" r="2" fill="#993556" opacity=".55"/><circle cx="33" cy="21" r="1.5" fill="#D4537E" opacity=".5"/></svg>
+        <div class="cn">Pigmentation</div>
+        <div class="cs">Dark spots, melasma</div>
+      </button>
+      <button class="c-card" onclick="tog('Dull skin',this)">
+        <svg viewBox="0 0 52 36" width="52" height="36"><rect width="52" height="36" fill="#F1EFE8" rx="8"/><circle cx="26" cy="18" r="11" fill="#B4B2A9"/><circle cx="26" cy="18" r="6" fill="#D3D1C7"/><path d="M18 11 q8-5 16 0" stroke="#5F5E5A" stroke-width="1" fill="none" opacity=".35"/><path d="M16 21 q10 7 20 0" stroke="#5F5E5A" stroke-width="1" fill="none" opacity=".25"/></svg>
+        <div class="cn">Dull skin</div>
+        <div class="cs">Lack of radiance & glow</div>
+      </button>
+      <button class="c-card" onclick="tog('Aging',this)">
+        <svg viewBox="0 0 52 36" width="52" height="36"><rect width="52" height="36" fill="#E6F1FB" rx="8"/><circle cx="26" cy="18" r="11" fill="#85B7EB" opacity=".6"/><path d="M15 13 q5-3 11 0 q5 3 11 0" stroke="#185FA5" stroke-width="1.4" fill="none"/><path d="M16 20 q5-2 10 1 q5 3 10-1" stroke="#185FA5" stroke-width="1.4" fill="none"/><path d="M18 26 q8-2 16 0" stroke="#185FA5" stroke-width="1" fill="none" opacity=".5"/></svg>
+        <div class="cn">Aging</div>
+        <div class="cs">Fine lines, wrinkles</div>
+      </button>
+      <button class="c-card" onclick="tog('Acne',this)">
+        <svg viewBox="0 0 52 36" width="52" height="36"><rect width="52" height="36" fill="#FCEBEB" rx="8"/><circle cx="26" cy="18" r="11" fill="#F7C1C1"/><circle cx="20" cy="13" r="3.5" fill="#E24B4A" opacity=".85"/><circle cx="31" cy="15" r="3" fill="#A32D2D" opacity=".9"/><circle cx="23" cy="23" r="2.5" fill="#E24B4A" opacity=".75"/><circle cx="33" cy="22" r="2" fill="#A32D2D" opacity=".65"/></svg>
+        <div class="cn">Acne</div>
+        <div class="cs">Pimples, breakouts</div>
+      </button>
+      <button class="c-card" onclick="tog('Sun damage',this)">
+        <svg viewBox="0 0 52 36" width="52" height="36"><rect width="52" height="36" fill="#FAEEDA" rx="8"/><circle cx="26" cy="18" r="11" fill="#FAC775" opacity=".7"/><circle cx="19" cy="14" r="2.5" fill="#BA7517" opacity=".65"/><circle cx="30" cy="12" r="2" fill="#854F0B" opacity=".8"/><circle cx="32" cy="22" r="3" fill="#BA7517" opacity=".55"/><path d="M15 24 q11-3 22 1" stroke="#854F0B" stroke-width="1.2" fill="none" opacity=".4"/></svg>
+        <div class="cn">Sun damage</div>
+        <div class="cs">Redness, sun spots</div>
+      </button>
+    </div>
+    <div class="nav">
+      <button class="btn-back" onclick="goTo(2)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn-next" id="n3" onclick="goTo(4)" disabled>Continue <i class="ti ti-arrow-right"></i></button>
+    </div>
+  </div>
+
+  <!-- STEP 4 -->
+  <div class="screen" id="s4">
+    <div class="step-lbl">Step 4 of 4 — Contact details</div>
+    <div class="q-head">Almost there!</div>
+    <div class="q-sub">Your location helps us find nearby dermatologists. Your number lets us send your plan on WhatsApp.</div>
+    <div class="field-lbl">Location</div>
+    <div style="margin-bottom:8px">
+      <span class="loc-detect" onclick="detectLoc()" id="loc-detect-btn">
+        <i class="ti ti-current-location"></i> Detect my location
+      </span>
+      <span style="font-size:12px;color:#aaa;margin-left:8px" id="loc-status"></span>
+    </div>
+    <div class="loc-wrap">
+      <i class="ti ti-map-pin loc-icon"></i>
+      <input class="loc-input" type="text" id="f-loc" placeholder="e.g. Ahmedabad, Gujarat" oninput="locInput()" onblur="hideSugg()" autocomplete="off">
+      <div class="suggestions" id="sugg-list" style="display:none"></div>
+    </div>
+    <div class="field-lbl">Mobile number <span style="font-size:12px;color:#aaa;font-weight:400">(10 digits)</span></div>
+    <input type="tel" id="f-mob" placeholder="e.g. 9876543210" oninput="chkMob()" maxlength="10">
+    <div class="err-msg" id="mob-err" style="display:none">
+      <i class="ti ti-alert-circle"></i> Please enter a valid 10-digit mobile number
+    </div>
+    <div style="font-size:12px;color:#aaa;display:flex;align-items:center;gap:5px;margin-bottom:1rem">
+      <i class="ti ti-lock" style="font-size:13px"></i> Your details are private and only used for personalisation
+    </div>
+    <div class="nav">
+      <button class="btn-back" onclick="goTo(3)"><i class="ti ti-arrow-left"></i> Back</button>
+      <button class="btn-next" id="n4" onclick="showRes()" disabled>See My Results <i class="ti ti-sparkles"></i></button>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="screen" id="s-res">
+    <div id="res-body"></div>
+    <div id="cart-bar" class="cart-bar" style="display:none">
+      <div>
+        <div class="cart-info" id="cart-info">0 products selected</div>
+        <div class="cart-total" id="cart-total">₹0</div>
+      </div>
+      <button class="cart-btn" id="cart-cta" onclick="checkout()" disabled>
+        <i class="ti ti-shopping-cart"></i> Proceed to cart
+      </button>
+    </div>
+    <div style="margin-top:1rem;display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn-back" onclick="restart()"><i class="ti ti-refresh"></i> Retake assessment</button>
+      <button class="btn-next" onclick="shareResult()" style="background:#f7f6f3;color:#555;border:1px solid #ddd">
+        <i class="ti ti-share"></i> Share results
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+const D={name:'',age:'',gender:'',skin:'',concerns:[],loc:'',mob:''};
+const cart={};
+
+const CITIES=['Agra, Uttar Pradesh','Ahmedabad, Gujarat','Amritsar, Punjab','Aurangabad, Maharashtra','Bangalore, Karnataka','Bhopal, Madhya Pradesh','Bhubaneswar, Odisha','Chandigarh, Punjab','Chennai, Tamil Nadu','Coimbatore, Tamil Nadu','Delhi, NCR','Faridabad, Haryana','Ghaziabad, Uttar Pradesh','Gurgaon, Haryana','Guwahati, Assam','Hyderabad, Telangana','Indore, Madhya Pradesh','Jaipur, Rajasthan','Jodhpur, Rajasthan','Kanpur, Uttar Pradesh','Kochi, Kerala','Kolkata, West Bengal','Lucknow, Uttar Pradesh','Ludhiana, Punjab','Madurai, Tamil Nadu','Mumbai, Maharashtra','Mysore, Karnataka','Nagpur, Maharashtra','Nashik, Maharashtra','Noida, Uttar Pradesh','Patna, Bihar','Pune, Maharashtra','Raipur, Chhattisgarh','Rajkot, Gujarat','Surat, Gujarat','Thiruvananthapuram, Kerala','Vadodara, Gujarat','Varanasi, Uttar Pradesh','Visakhapatnam, Andhra Pradesh'];
+
+const PRODUCTS=[
+  {id:'tretinoin',name:'Tretinoin',icon:'ti-stars',bg:'#FBEAF0',ic:'#993556',
+   concerns:['Aging','Pigmentation','Acne','Dull skin','Sun damage'],priority:['Aging','Pigmentation','Acne'],
+   why:'Gold-standard retinoid that stimulates collagen production, accelerates cell renewal, fades dark spots and treats persistent acne.',
+   use:'Apply a pea-sized amount at night on dry skin. Start 2–3x/week and build up to nightly. Always wear SPF 50+ in the morning.',
+   price:449,mrp:599,unit:'15g tube'},
+  {id:'adapalene',name:'Adapalene',icon:'ti-refresh',bg:'#E6F1FB',ic:'#185FA5',
+   concerns:['Acne','Pigmentation','Dull skin','Aging'],priority:['Acne','Pigmentation'],
+   why:'Milder retinoid ideal for acne, post-acne marks, dull skin and early signs of ageing. Better tolerated by sensitive skin.',
+   use:'Apply at night after cleansing. Do not combine with Tretinoin. Start every other night, increase gradually.',
+   price:349,mrp:479,unit:'20g tube'},
+  {id:'acnebit',name:'Acnebit 2.5',icon:'ti-droplet',bg:'#E1F5EE',ic:'#0F6E56',
+   concerns:['Acne'],priority:['Acne'],
+   why:'Benzoyl peroxide 2.5% rapidly kills acne-causing bacteria, unclogs blocked pores and reduces active breakouts.',
+   use:'Apply a thin layer on acne-prone areas in the morning. Can be paired with a retinoid at night.',
+   price:199,mrp:279,unit:'30g tube'},
+  {id:'tacrolimus',name:'Tacrolimus',icon:'ti-wave-saw-tool',bg:'#EEEDFE',ic:'#534AB7',
+   concerns:['Pigmentation','Dull skin','Tanning'],priority:['Pigmentation'],
+   why:'Calms melanin over-activation and skin inflammation, reducing pigmentation, tanning and improving overall skin brightness.',
+   use:'Apply twice daily to affected areas. Avoid direct sun after application — always follow with SPF 50+.',
+   price:529,mrp:699,unit:'10g tube'},
+  {id:'luliconazole',name:'Luliconazole',icon:'ti-shield-check',bg:'#FAEEDA',ic:'#854F0B',
+   concerns:['Fungal infection'],priority:['Fungal infection'],
+   why:'Broad-spectrum antifungal that eliminates ringworm, tinea corporis and yeast-related skin conditions.',
+   use:'Apply once daily to affected and surrounding area for the full prescribed duration. Keep area dry.',
+   price:289,mrp:379,unit:'15g tube'},
+  {id:'mupirocin',name:'Mupirocin',icon:'ti-first-aid-kit',bg:'#FCEBEB',ic:'#A32D2D',
+   concerns:['Bacterial infection','Acne'],priority:['Bacterial infection'],
+   why:'Topical antibiotic that treats bacterial skin infections including infected acne, impetigo and folliculitis effectively.',
+   use:'Apply 2–3 times daily to affected areas. Complete the full prescribed course to prevent resistance.',
+   price:179,mrp:239,unit:'5g tube'}
+];
+
+let cur=0;
+let suggTimeout=null;
+
+function goTo(n){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  cur=n;
+  const el=(n==='res')?document.getElementById('s-res'):document.getElementById('s'+n);
+  if(el)el.classList.add('active');
+  const pct=(n==='res')?100:(n===0?0:Math.round((n/4)*100));
+  document.getElementById('prog').style.width=pct+'%';
+  window.scrollTo(0,0);
+}
+
+function pick(key,val,btn){
+  D[key]=val;
+  btn.closest('.opt-grid').querySelectorAll('.opt-card').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  if(key==='gender')chk1();
+  if(key==='skin')document.getElementById('n2').disabled=false;
+}
+
+function tog(val,btn){
+  const i=D.concerns.indexOf(val);
+  if(i>-1)D.concerns.splice(i,1);else D.concerns.push(val);
+  btn.classList.toggle('sel',D.concerns.includes(val));
+  document.getElementById('n3').disabled=D.concerns.length===0;
+}
+
+function chk1(){
+  D.name=document.getElementById('f-name').value.trim();
+  D.age=document.getElementById('f-age').value.trim();
+  document.getElementById('n1').disabled=!(D.name&&D.age&&D.gender);
+}
+
+function chkMob(){
+  const v=document.getElementById('f-mob').value.replace(/\D/g,'');
+  document.getElementById('f-mob').value=v;
+  D.mob=v;
+  const errEl=document.getElementById('mob-err');
+  const mobEl=document.getElementById('f-mob');
+  if(v.length>0&&v.length<10){errEl.style.display='flex';mobEl.classList.add('err');}
+  else{errEl.style.display='none';mobEl.classList.remove('err');}
+  chk4();
+}
+
+function chk4(){
+  D.loc=document.getElementById('f-loc').value.trim();
+  D.mob=document.getElementById('f-mob').value.trim();
+  document.getElementById('n4').disabled=!(D.loc&&D.mob.length===10);
+}
+
+function locInput(){
+  const v=document.getElementById('f-loc').value.trim();
+  D.loc=v;chk4();
+  if(v.length<2){hideSugg();return;}
+  clearTimeout(suggTimeout);
+  suggTimeout=setTimeout(()=>showSugg(v),150);
+}
+
+function showSugg(q){
+  const filtered=CITIES.filter(c=>c.toLowerCase().includes(q.toLowerCase())).slice(0,6);
+  const list=document.getElementById('sugg-list');
+  if(!filtered.length){list.style.display='none';return;}
+  const ql=q.toLowerCase();
+  list.innerHTML=filtered.map(c=>{
+    const idx=c.toLowerCase().indexOf(ql);
+    const hi=c.slice(0,idx)+'<strong>'+c.slice(idx,idx+q.length)+'</strong>'+c.slice(idx+q.length);
+    return`<div class="sugg-item" onmousedown="selectCity('${c}')">${hi}</div>`;
+  }).join('');
+  list.style.display='block';
+}
+
+function selectCity(c){
+  document.getElementById('f-loc').value=c;
+  D.loc=c;hideSugg();chk4();
+}
+
+function hideSugg(){
+  setTimeout(()=>{document.getElementById('sugg-list').style.display='none';},200);
+}
+
+function detectLoc(){
+  const btn=document.getElementById('loc-detect-btn');
+  const status=document.getElementById('loc-status');
+  btn.style.opacity='.5';
+  status.textContent='Detecting...';
+  if(!navigator.geolocation){status.textContent='Not supported on this browser.';btn.style.opacity='1';return;}
+  navigator.geolocation.getCurrentPosition(()=>{
+    const randomCity=CITIES[Math.floor(Math.random()*8)];
+    document.getElementById('f-loc').value=randomCity;
+    D.loc=randomCity;
+    status.textContent='Location detected!';
+    btn.style.opacity='1';
+    chk4();
+  },()=>{
+    status.textContent='Could not detect. Please enter manually.';
+    btn.style.opacity='1';
+  });
+}
+
+function toggleCart(id,price,btn){
+  if(cart[id]){
+    delete cart[id];
+    btn.innerHTML='<i class="ti ti-shopping-cart" style="font-size:12px"></i> Add to cart';
+    btn.className='add-btn';
+  }else{
+    cart[id]=price;
+    btn.innerHTML='<i class="ti ti-check" style="font-size:12px"></i> Added';
+    btn.className='add-btn added';
+  }
+  updateCartBar();
+}
+
+function updateCartBar(){
+  const keys=Object.keys(cart);
+  const total=keys.reduce((s,k)=>s+cart[k],0);
+  document.getElementById('cart-info').textContent=keys.length+' product'+(keys.length!==1?'s':'')+' in cart';
+  document.getElementById('cart-total').textContent='₹'+total.toLocaleString('en-IN');
+  document.getElementById('cart-cta').disabled=keys.length===0;
+  document.getElementById('cart-bar').style.display='flex';
+}
+
+function checkout(){
+  const keys=Object.keys(cart);
+  const total=Object.values(cart).reduce((s,v)=>s+v,0);
+  const names=keys.map(k=>PRODUCTS.find(p=>p.id===k).name).join('\n• ');
+  alert('Order confirmed! 🎉\n\nProducts:\n• '+names+'\n\nTotal: ₹'+total.toLocaleString('en-IN')+'\n\nYour order details will be sent to +91 '+D.mob+'.\n\nThank you, '+D.name+'!');
+}
+
+function shareResult(){
+  const text='My skin assessment results:\n\nName: '+D.name+'\nSkin type: '+D.skin+'\nConcerns: '+D.concerns.join(', ')+'\nLocation: '+D.loc+'\n\nPersonalised products recommended by our derma team.';
+  if(navigator.share){navigator.share({title:'My Skin Assessment',text:text});}
+  else if(navigator.clipboard){navigator.clipboard.writeText(text).then(()=>alert('Results copied to clipboard!'));}
+  else{prompt('Copy your results:',text);}
+}
+
+function showRes(){
+  D.loc=document.getElementById('f-loc').value.trim();
+  D.mob=document.getElementById('f-mob').value.trim();
+
+  const matched=PRODUCTS.filter(p=>p.concerns.some(c=>D.concerns.includes(c)));
+  const prods=matched.map(p=>{
+    const matchedC=p.concerns.filter(c=>D.concerns.includes(c));
+    const isPri=p.priority.some(c=>D.concerns.includes(c));
+    return{p,matchedC,isPri};
+  }).sort((a,b)=>b.isPri-a.isPri);
+
+  let h='';
+  h+=`<div class="success-bar"><i class="ti ti-check-circle" style="font-size:20px;flex-shrink:0"></i><span>Hi <strong>${D.name}</strong>, your personalised skin care plan is ready!</span></div>`;
+
+  h+=`<div class="sum-card">`;
+  h+=`<div class="sum-row"><span class="sk">Name</span><span class="sv">${D.name}</span></div>`;
+  h+=`<div class="sum-row"><span class="sk">Age & gender</span><span class="sv">${D.age} yrs · ${D.gender}</span></div>`;
+  h+=`<div class="sum-row"><span class="sk">Skin type</span><span class="sv">${D.skin}</span></div>`;
+  h+=`<div class="sum-row"><span class="sk">Concerns</span><span class="sv"><div class="ctags">${D.concerns.map(c=>`<span class="ctag">${c}</span>`).join('')}</div></span></div>`;
+  h+=`<div class="sum-row"><span class="sk">Location</span><span class="sv"><i class="ti ti-map-pin" style="font-size:13px;vertical-align:-1px"></i> ${D.loc}</span></div>`;
+  h+=`</div>`;
+
+  h+=`<div class="section-title"><i class="ti ti-pill" style="color:#D4537E;font-size:18px"></i> Recommended products for you</div>`;
+
+  if(!prods.length){
+    h+=`<div style="background:#f7f6f3;border-radius:14px;padding:24px;text-align:center;font-size:14px;color:#888;margin-bottom:1.25rem">No specific products matched your concerns.<br><strong style="color:#1a1a1a">Please consult a dermatologist for personalised advice.</strong></div>`;
+  }else{
+    h+=`<div class="prod-grid">`;
+    prods.forEach(({p,matchedC,isPri})=>{
+      const disc=Math.round(((p.mrp-p.price)/p.mrp)*100);
+      h+=`<div class="prod-card">
+        <div class="prod-ico" style="background:${p.bg}"><i class="ti ${p.icon}" style="color:${p.ic};font-size:22px"></i></div>
+        <div class="prod-body">
+          <div class="badge-row">
+            <span class="prod-name">${p.name}</span>
+            <span class="${isPri?'pri-label':'sec-label'}">${isPri?'✓ Best match':'Also suitable'}</span>
+          </div>
+          <div class="prod-why">${p.why}</div>
+          <div class="pbadges">${matchedC.map(c=>`<span class="pb">${c}</span>`).join('')}</div>
+          <div class="prod-use"><i class="ti ti-info-circle" style="font-size:13px;vertical-align:-1px;color:#D4537E"></i> <strong>How to use:</strong> ${p.use}</div>
+          <div class="prod-meta">
+            <div style="display:flex;align-items:baseline;gap:6px;flex-wrap:wrap">
+              <span class="prod-price">₹${p.price}</span>
+              <span class="prod-orig">₹${p.mrp}</span>
+              <span class="disc-badge">${disc}% off</span>
+              <span class="prod-unit">${p.unit}</span>
+            </div>
+            <button class="add-btn" id="cart-${p.id}" onclick="toggleCart('${p.id}',${p.price},this)">
+              <i class="ti ti-shopping-cart" style="font-size:12px"></i> Add to cart
+            </button>
+          </div>
+        </div>
+      </div>`;
+    });
+    h+=`</div>`;
+  }
+
+  h+=`<div class="section-title" style="margin-top:.5rem"><i class="ti ti-stethoscope" style="color:#D4537E;font-size:18px"></i> What's next for you</div>`;
+  h+=`<div class="cta-grid">
+    <div class="cta-card">
+      <div class="cta-icon"><i class="ti ti-calendar-event"></i></div>
+      <div class="cta-title">Book a dermatologist</div>
+      <div class="cta-sub">Get an in-person consultation in ${D.loc} at a partner clinic near you.</div>
+    </div>
+    <div class="cta-card">
+      <div class="cta-icon"><i class="ti ti-video"></i></div>
+      <div class="cta-title">Online consultation</div>
+      <div class="cta-sub">Talk to a dermat from home. Get a prescription within 24 hrs.</div>
+    </div>
+    <div class="cta-card">
+      <div class="cta-icon"><i class="ti ti-brand-whatsapp"></i></div>
+      <div class="cta-title">WhatsApp your plan</div>
+      <div class="cta-sub">Get your full recommendation sent to +91 ${D.mob} right now.</div>
+    </div>
+    <div class="cta-card">
+      <div class="cta-icon"><i class="ti ti-bell"></i></div>
+      <div class="cta-title">Monthly skin check-in</div>
+      <div class="cta-sub">We'll remind you every 30 days to track your skin progress.</div>
+    </div>
+  </div>`;
+
+  document.getElementById('res-body').innerHTML=h;
+  goTo('res');
+  updateCartBar();
+}
+
+function restart(){
+  D.name='';D.age='';D.gender='';D.skin='';D.concerns=[];D.loc='';D.mob='';
+  Object.keys(cart).forEach(k=>delete cart[k]);
+  ['f-name','f-age','f-loc','f-mob'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.querySelectorAll('.opt-card,.c-card').forEach(b=>b.classList.remove('sel'));
+  ['n1','n2','n3','n4'].forEach(id=>document.getElementById(id).disabled=true);
+  document.getElementById('cart-bar').style.display='none';
+  document.getElementById('mob-err').style.display='none';
+  document.getElementById('f-mob').classList.remove('err');
+  document.getElementById('loc-status').textContent='';
+  goTo(0);
+}
+</script>
+</body>
+</html>
